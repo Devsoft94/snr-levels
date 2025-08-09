@@ -255,13 +255,14 @@
         </div>
     </div>
 
-    <footer>
-        &copy; `${new Date().getFullYear()} Purnendu Bhattacharya. All rights reserved.`
+<footer id="copyright-footer">
+        &copy; <span id="current-year"></span> Purnendu Bhattacharya. All rights reserved.
     </footer>
 
     <div id="copy-notification" class="copy-notification">Copied!</div>
 
     <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
         document.getElementById('snr-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
