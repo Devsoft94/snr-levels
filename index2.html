@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support & Resistance Levels</title>
+    <style>
+        /* Define CSS variables for consistent theming */
+        :root {
+            --primary: #3b82f6;
+            --primary-light: #93c5fd;
+            --primary-dark: #1d4ed8;
+            --support: #60a5fa;
+            --success: #10b981; /* Green color for 'COPIED!' text */
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-800: #1f2937;
+        }
+        
+        /* Universal box-sizing for consistent layout */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            user-select: none; /* Disable text selection */
+            -webkit-user-select: none; /* For Webkit browsers */
+        }
+        
+        /* Body styling for overall page layout */
+        body {
+            background-color: var(--gray-100);
+            color: var(--gray-800);
+            line-height: 1.5;
+            padding: 1rem;
+            max-width: 600px; /* Max width for content */
+            margin: 0 auto; /* Center content */
+            min-height: 100vh; /* Full viewport height */
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Main container styling */
+        .container {
+            background-color: white;
+            border-radius: 0.5rem; /* Rounded corners */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            padding: 1.5rem;
+            flex: 1;
+        }
+        
+        /* Heading styling */
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--primary-dark);
+        }
+        
+        /* Form row layout */
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Individual form group styling */
+        .form-group {
+            flex: 1;
+        }
+        
+        /* Label styling */
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--gray-800);
+        }
+        
+        /* Input field styling */
+        input {
+            width: 100%;
+            padding: 0.625rem;
+            border: 1px solid var(--gray-200);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            background-color: white;
+        }
+        
+        /* Hide spin buttons for number inputs */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        
+        /* Button styling */
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        /* Results section styling, initially hidden */
+        .results {
+            margin-top: 1.5rem;
+            display: none;
+        }
+        
+        /* Levels container grid layout */
+        .levels-container {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        /* Card styling for support/resistance sections */
+        .card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            padding: 1rem;
+        }
+        
+        /* Card header styling */
+        .card-header {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--gray-200);
+        }
+        
+        /* Specific header colors */
+        .support-header {
+            color: var(--primary);
+        }
+        
+        .resistance-header {
+            color: var(--primary);
+        }
+        
+        /* Styling for individual level rows */
+        .level {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            /* No hover effect on this element as requested */
+            cursor: pointer; /* Indicates it's clickable for copying the value */
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Styling for the level value text */
+        .level-value {
+            font-weight: 500;
+            font-size: 0.9375rem;
+            margin-right: 2rem; /* Increased space between value and button */
+        }
+        
+        /* Styling for the copy button */
+        .copy-btn {
+            background-color: var(--gray-200); /* Default background color */
+            color: var(--gray-800); /* Default text color */
+            border: none;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s; /* Smooth transition for color/text changes */
+            min-width: 60px; /* Ensure consistent width */
+        }
+        
+        /* Hover effect for the copy button */
+        .copy-btn:hover {
+            background-color: var(--gray-400);
+            color: white;
+        }
+        
+        /* Style for the copy button when text is 'COPIED!' */
+        .copy-btn.copied {
+            background-color: var(--gray-200); /* Keep the same background color */
+            color: var(--success); /* Change text color to green */
+        }
+        
+        /* Styling for the copy notification pop-up */
+        .copy-notification {
+            position: fixed;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--gray-800);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            opacity: 0; /* Initially hidden */
+            transition: opacity 0.2s; /* Smooth fade in/out */
+            pointer-events: none; /* Allows clicks to pass through when hidden */
+            z-index: 1000; /* Ensure it's on top */
+        }
+        
+        /* Show state for the copy notification */
+        .copy-notification.show {
+            opacity: 1;
+        }
+        
+        /* Footer styling */
+        footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            font-size: 0.875rem;
+            color: var(--gray-500);
+        }
+        
+        /* Responsive design for smaller screens */
+        @media (max-width: 640px) {
+            .form-row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Support & Resistance Levels</h1>
+        
+        <form id="snr-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="base-price">High/Low Price</label>
+                    <input type="number" id="base-price" step="0.01" min="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="current-price">Current Price</label>
+                    <input type="number" id="current-price" step="0.01" min="0.01" required>
+                </div>
+            </div>
+            
+            <button type="submit">Calculate Levels</button>
+        </form>
+        
+        <div id="results" class="results">
+            <div class="levels-container">
+                <div class="card">
+                    <div class="card-header support-header">
+                        SUPPORT LEVELS
+                    </div>
+                    <div id="support-levels"></div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header resistance-header">
+                        RESISTANCE LEVELS
+                    </div>
+                    <div id="resistance-levels"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; <span id="current-year"></span> Purnendu Bhattacharya. All rights reserved.
+    </footer>
+
+    <div id="copy-notification" class="copy-notification">Copied!</div>
+
+    <script>
+        // Set the current year in the footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+
+        // Event listener for form submission
+        document.getElementById('snr-form').addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent default form submission
+            
+            const basePrice = parseFloat(document.getElementById('base-price').value);
+            const currentPrice = parseFloat(document.getElementById('current-price').value);
+            
+            // Calculate support and resistance levels
+            const result = getSupportResistance(basePrice, currentPrice);
+            displayResults(result);
+        });
+        
+        /**
+         * Calculates support and resistance levels based on given prices.
+         * This algorithm uses a method based on the square root of the price
+         * to find potential levels.
+         * @param {number} price - The high/low price.
+         * @param {number} ref - The current price (reference point).
+         * @returns {object} An object containing supportLevels and resistanceLevels arrays.
+         */
+        function getSupportResistance(price, ref) {
+            const base = Math.sqrt(price);
+            
+            let closestN = 0;
+            let minDiff = Infinity;
+            
+            // Find the 'n' value that makes (base +/- n)^2 closest to the reference price
+            for (let n = 0; n <= 1000; n++) {
+                const valPos = Math.pow(base + n, 2);
+                const valNeg = Math.pow(base - n, 2);
+                
+                const diffPos = Math.abs(valPos - ref);
+                const diffNeg = Math.abs(valNeg - ref);
+                
+                if (diffPos < minDiff) {
+                    minDiff = diffPos;
+                    closestN = n;
+                }
+                
+                if (diffNeg < minDiff) {
+                    minDiff = diffNeg;
+                    closestN = -n;
+                }
+                
+                // Optimization: break if levels are too far out
+                if (n > 0 && Math.pow(base + n, 2) > ref * 1.5 && 
+                    Math.pow(base - n, 2) < ref * 0.5) {
+                    break;
+                }
+            }
+            
+            const levels = [];
+            // Generate 5 support and 5 resistance levels around the closestN
+            for (let i = -5; i <= 5; i++) {
+                if (i === 0) continue; // Skip the exact closest point as it's the reference
+                
+                const currentN = closestN + i;
+                const level = Math.pow(base + currentN, 2);
+                levels.push({
+                    type: i > 0 ? 'resistance' : 'support',
+                    level: parseFloat(level.toFixed(2)) // Round to 2 decimal places
+                });
+            }
+            
+            // Sort levels numerically
+            levels.sort((a, b) => a.level - b.level);
+            
+            // Return separated support and resistance levels
+            return {
+                supportLevels: levels.filter(l => l.type === 'support').slice(0, 5),
+                resistanceLevels: levels.filter(l => l.type === 'resistance').slice(0, 5)
+            };
+        }
+        
+        /**
+         * Displays the calculated support and resistance levels on the page.
+         * @param {object} result - An object containing supportLevels and resistanceLevels.
+         */
+        function displayResults(result) {
+            const supportContainer = document.getElementById('support-levels');
+            supportContainer.innerHTML = ''; // Clear previous results
+            
+            // Populate support levels
+            result.supportLevels.forEach(level => {
+                const div = document.createElement('div');
+                div.className = 'level';
+                div.innerHTML = `
+                    <span class="level-value">${level.level}</span>
+                    <button class="copy-btn">Copy</button>
+                `;
+                const copyBtn = div.querySelector('.copy-btn');
+                
+                // Event listener for the individual copy button
+                copyBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent the parent div's click event from firing
+                    copyToClipboard(level.level, copyBtn);
+                });
+
+                // Event listener for clicking anywhere on the row to copy
+                div.addEventListener('click', () => copyToClipboard(level.level, copyBtn));
+                supportContainer.appendChild(div);
+            });
+            
+            const resistanceContainer = document.getElementById('resistance-levels');
+            resistanceContainer.innerHTML = ''; // Clear previous results
+            
+            // Populate resistance levels
+            result.resistanceLevels.forEach(level => {
+                const div = document.createElement('div');
+                div.className = 'level';
+                div.innerHTML = `
+                    <span class="level-value">${level.level}</span>
+                    <button class="copy-btn">Copy</button>
+                `;
+                const copyBtn = div.querySelector('.copy-btn');
+                
+                // Event listener for the individual copy button
+                copyBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent the parent div's click event from firing
+                    copyToClipboard(level.level, copyBtn);
+                });
+
+                // Event listener for clicking anywhere on the row to copy
+                div.addEventListener('click', () => copyToClipboard(level.level, copyBtn));
+                resistanceContainer.appendChild(div);
+            });
+            
+            // Show the results section
+            document.getElementById('results').style.display = 'block';
+        }
+        
+        /**
+         * Copies text to the clipboard and provides visual feedback.
+         * @param {string} text - The text to copy.
+         * @param {HTMLElement} button - The button element that was clicked.
+         */
+        function copyToClipboard(text, button) {
+            // Create a temporary textarea element to hold the text
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = text.toString();
+            document.body.appendChild(tempTextArea); // Append to the body
+            tempTextArea.select(); // Select the text
+            
+            try {
+                // Execute the copy command
+                document.execCommand('copy');
+
+                // Show 'Copied!' notification
+                const notification = document.getElementById('copy-notification');
+                notification.classList.add('show');
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 2000); // Hide after 2 seconds
+                
+                // Change button text and style if a button element is provided
+                if (button) {
+                    button.textContent = 'Copied!'; // Change text to 'Copied!'
+                    button.classList.add('copied'); // Apply green text style
+                    
+                    setTimeout(() => {
+                        button.textContent = 'Copy'; // Revert text to 'Copy'
+                        button.classList.remove('copied'); // Remove green text style
+                    }, 2000);
+                }
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                // Fallback message if copy fails (e.g., browser doesn't support execCommand or it's blocked)
+            } finally {
+                document.body.removeChild(tempTextArea); // Remove the temporary textarea
+            }
+        }
+    </script>
+</body>
+</html>
